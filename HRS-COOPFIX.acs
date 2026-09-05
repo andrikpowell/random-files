@@ -1,0 +1,95 @@
+#library "COOPFIX"
+#include "zcommon.acs"
+#include "GetSrcPort.acs" // must put code from SRCPORT into file "GetSrcPort.acs" next to "zcommon.acs" when compiling
+
+#define TID_STONEBARON 6969
+
+// Hardcoded coordinates for Spawning TIDSetter things (X, Y)
+int TIDSetterCoordinates[25][2] = {
+	{ -2832.0, 2928.0 },
+	{  -1488.0, 3328.0 },
+	{  -1488.0, 3024.0 },
+	{  -1424.0, 2656.0 },
+	{  -64.0, 3104.0 },
+	{  -2320.0, 2176.0 },
+	{ -448.0, 2240.0 },
+	{  -1712.0, 1968.0 },
+	{  -976.0, 1968.0 },
+	{  -1712.0, 1456.0 },
+	{  -1136.0, 1456.0 },
+	{  -440.0, 1456.0 },
+	{ -2816.0, 1840.0 },
+	{  -80.0, 1888.0 },
+	{  -3024.0, 1248.0 },
+	{  -2464.0, 1376.0 },
+	{  288.0, 1536.0 },
+	{  -2240.0, 1120.0 },
+	{ -704.0, 1072.0 },
+	{  -3056.0, 752.0 },
+	{  -1744.0, 608.0 },
+	{  -2720.0, 192.0 },
+	{  -1360.0, 336.0 },
+	{  336.0, 448.0 },
+	{  -272.0, 448.0 }
+};
+
+Script "MAP14_Coop_Fix" OPEN {
+
+	if (GetCVar("hrscoop_map14patch_disable") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON))
+		{		
+		int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+		if (mapLump == 14) {
+
+			// Only add coop fixes when not playing in Singleplayer
+				if (GameType() != GAME_SINGLE_PLAYER) {
+					if (GetSrcPort() != PORT_ZDAEMON) // ZDaemon uses PATCHINF instead.
+					{
+						int i, x, y;
+						
+						for (i = 0; i < 25; i++)
+						{
+							x = TIDSetterCoordinates[i][0];
+							y = TIDSetterCoordinates[i][1];
+							
+							// Spawn Decorate TIDSetter things at monster positions.
+							SpawnForced("TIDSetter_6969", x,  y, -128.0, 0, 0); // spawn TID givers for StoneBarons
+						
+							// Wait a tic for the TIDs to get assigned.
+							Delay(1);
+						}
+					}
+					Thing_Remove(93); // Remove singleplayer teleport destinations for ZDaemon
+					Thing_Remove(94);
+					Spawn("TeleportDest", 2064.0, 3032.0, 0, 93, 128); // Spawn teleport destinations for ZDoom ports
+					Spawn("TeleportDest", 1312.0, 2200.0, 0, 94, 0);
+					SpawnForced("TeleportDest", -1428.0, 1676.0, -128.0, 184, 64);
+					SetCeilingTrigger(100,-1,Ceiling_CrushStop,100); // Check if crusher starts and then disable them.
+					SetCeilingTrigger(153,-1,Ceiling_CrushStop,153);
+					SetCeilingTrigger(152,-1,Ceiling_CrushStop,152);
+					SetCeilingTrigger(153,-1,Thing_Destroy,TID_STONEBARON,0); // When crusher starts kill all stone barons
+				}
+		}
+	}
+}
+
+Script "MAP28_Coop_Fix" OPEN {
+
+	if (GetCVar("hrscoop_map28patch_disable") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON))
+		{		
+			int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+			if (mapLump == 28) {
+				// Only add coop fixes when not playing in Singleplayer
+					if (GameType() != GAME_SINGLE_PLAYER) {
+						Thing_Remove(85); // Remove singleplayer teleport destinations for ZDaemon
+						Spawn("TeleportDest", 1656.0, 4552.0, 488.0, 85, 0); // Spawn teleport destinations for ZDoom ports
+						Spawn("TeleportDest", 3998.0, 4664.0, 256.0, 69, 128);
+					}
+			}
+	}
+}
