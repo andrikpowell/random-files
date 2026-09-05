@@ -1,0 +1,95 @@
+#library "RUSTCOMP"
+#include "zcommon.acs"
+#include "GetSrcPort.acs" // must put code from SRCPORT into file "GetSrcPort.acs" next to "zcommon.acs" when compiling
+
+Script "RUST_E1M8_Compat_Spider" OPEN {
+
+	if (GetCVar("rust_e1m8_compat_disable") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON) || (GetSrcPort() == PORT_ETERNITY))
+		{		
+			int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+			if (mapLump == 8) {
+				// add boss action
+				//Log(s:"Masterminds: ",d:(ThingCountName("Arachnotron",0)));
+				While(ThingCountName("Arachnotron", 0) > 0)
+				Delay(35);
+				//Log(s:"Spiders dead, lowering floor");
+				Floor_LowerToLowest(666, 8);
+			}
+	}
+}
+
+Script "RUST_E1M8_Compat_Cyber" OPEN {
+
+	if (GetCVar("rust_e1m8_compat_disable") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON) || (GetSrcPort() == PORT_ETERNITY))
+		{		
+			int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+			if (mapLump == 8) {
+				// add boss action
+				//Log(s:"Cyberdemons: ",d:(ThingCountName("Cyberdemon",0)));
+				While (ThingCountName("Cyberdemon", 0) > 0)
+				Delay(35);
+				//Log(s:"Cybers dead, lowering floor");
+				Floor_LowerToLowest(666, 8);
+			}
+	}
+}
+
+Script "RUST_E1M4_New_Game_Plus" OPEN {
+
+	
+	if (GetCVar("rust_e1m4_coop_fix") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON))
+		{		
+		int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+		if (mapLump == 4) {
+			// Only add fix to New Game Plus
+				if(ThingCountName("Cyberdemon", 0) > 0) {
+				//Log(s:"New Game Plus script ready");
+				SetFloorTrigger(8,+1,Floor_LowerToLowest,4,8); // Lower floor in new game plus (mastermind physics fucked in ZDoom ports).
+				//Log(s:"Lowering Floor");
+				}
+		}
+	}
+}
+
+Script "RUST_E2M8_Compat_Cyber" OPEN {
+
+	if (GetCVar("rust_e2m8_compat_disable") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON) || (GetSrcPort() == PORT_ETERNITY))
+		{		
+			int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+			if (mapLump == 18) {
+				// add boss action
+				//Log(s:"Cyberdemons: ",d:(ThingCountName("Cyberdemon",0)));
+				While (ThingCountName("Cyberdemon", 0) > 0)
+				Delay(100);
+				//Log(s:"Cybers dead, end map");
+				Exit_Normal(0);
+			}
+	}
+}
+
+Script "RUST_E3M5_Compat_Fly_Fix" OPEN {
+
+	if (GetCVar("rust_e3m5_compat_disable") > 0) 
+		Terminate;
+
+	if ((GetSrcPort() == PORT_ZDOOM) || (GetSrcPort() == PORT_GZDOOM) || (GetSrcPort() == PORT_LZDOOM) || (GetSrcPort() == PORT_ZANDRONUM) || (GetSrcPort() == PORT_ZDAEMON) || (GetSrcPort() == PORT_ETERNITY))
+		{		
+			int mapLump = GetLevelInfo (LEVELINFO_LEVELNUM);
+			if (mapLump == 25) {
+				Sector_SetGravity(182, -1, 0);		// Reverse gravity
+				ThrustThingZ(0, 32, 0, 1);			// thrust player up to trigger gravity
+			}
+	}
+}
