@@ -1,0 +1,137 @@
+// GetSrcPort() function for detecting the source port.
+// Version 1.0 (2023-12-14)
+// Made by Worst
+
+#define PORT_UNKNOWN 0
+#define PORT_ZDOOM 1
+#define PORT_GZDOOM 2
+#define PORT_LZDOOM 3
+#define PORT_ZANDRONUM 4
+#define PORT_ZDAEMON 5
+#define PORT_ETERNITY 6
+
+int GetSrcPort_Result = -1;
+
+function int GetSrcPort(void)
+{
+	// Use last result (the source port shouldn't change during gameplay).
+	if (GetSrcPort_Result != -1)
+		return GetSrcPort_Result;
+
+	// Check for cvar override (Uses 2 CVars)
+	If (GetCVar("GetSrcPort_OverrideEnable"))
+	{
+		GetSrcPort_Result = GetCVar("GetSrcPort_OverridePort");
+		return GetSrcPort_Result;
+	}
+
+	// ZDoom tests
+	int is_zdoom = 0;
+	if (GetCVar("turbo")         ) is_zdoom += 1; // (min 10.0, def 100.0)
+	if (GetCVar("transsouls")    ) is_zdoom += 1; // (min 0.25, def 0.75)
+	if (GetCVar("screenblocks")  ) is_zdoom += 1; // (min 3, def 10)
+	if (GetCVar("r_maxparticles")) is_zdoom += 1; // (min 100, def 4000)
+	if (GetCVar("gamma")         ) is_zdoom += 1; // (min !0, def 1.0)
+
+	// GZDoom tests
+	int is_gzdoom = 0;
+	if (GetCVar("turbo")         ) is_gzdoom += 1; // (min 10.0, def 100.0)
+	if (GetCVar("transsouls")    ) is_gzdoom += 1; // (min 0.25, def 0.75)
+	if (GetCVar("screenblocks")  ) is_gzdoom += 1; // (min 3, def 10)
+	if (GetCVar("r_maxparticles")) is_gzdoom += 1; // (min 100, def 4000)
+	if (GetCVar("i_timescale")   ) is_gzdoom += 1; // (min 0.05, def 1.0)
+
+	// LZDoom tests
+	int is_lzdoom = 0;
+	if (GetCVar("turbo")         ) is_lzdoom += 1; // (min 10.0, def 100.0)
+	if (GetCVar("transsouls")    ) is_lzdoom += 1; // (min 0.25, def 0.75)
+	if (GetCVar("screenblocks")  ) is_lzdoom += 1; // (min 3, def 10)
+	if (GetCVar("r_maxparticles")) is_lzdoom += 1; // (min 100, def 4000)
+	if (GetCVar("gamma")         ) is_lzdoom += 1; // (min !0, def 1.0)
+	if (GetCVar("i_timescale")   ) is_lzdoom += 1; // (min 0.05, def 1.0)
+
+	// Zandronum tests
+	int is_zandronum = 0;
+	// Client & Server shared CVars in Zandronum:
+	if (GetCVar("turbo")       ) is_zandronum += 1; // (min 10.0, def 100.0)
+	if (GetCVar("gamma")       ) is_zandronum += 1; // (min !0, def 1.0)
+	if (GetCVar("sv_maxpacketspertick")) is_zandronum += 1; // (min 1)
+	if (GetCVar("sv_maxteams")         ) is_zandronum += 1; // (min 2)
+	if (GetCVar("sv_minvoters")        ) is_zandronum += 1; // (min 1)
+
+	// ZDaemon tests
+	int is_zdaemon = 0;	
+	// Client & Server shared CVars in ZDaemon:
+	if (GetCVar("maxteams")      ) is_zdaemon += 1; // (min 1)
+	if (GetCVar("joinable_teams")) is_zdaemon += 1; // (min 1)	
+	// Client only or Server only CVars:
+	//           CLIENT                  SERVER
+	if (GetCVar("mic_scale") || GetCVar("log_publish_maxage")) 
+		is_zdaemon += 1;
+	if (GetCVar("pip_width") || GetCVar("sv_info_caching"))
+		is_zdaemon += 1;
+	if (GetCVar("demo_progressheight") || GetCVar("maxclients"))
+		is_zdaemon += 1;
+
+	// Eternity tests
+	int is_eternity = 0;
+	if (GetCVar("chasecam_dist") ) is_eternity += 1; // (min 10)
+	if (GetCVar("chasecam_speed")) is_eternity += 1; // (min 1)
+	if (GetCVar("c_speed")       ) is_eternity += 1; // (min 1)
+	if (GetCVar("c_height")      ) is_eternity += 1; // (min 20)
+	if (GetCVar("gl_colordepth") ) is_eternity += 1; // (min 16)
+	if (GetCVar("i_endoomdelay") ) is_eternity += 1; // (min 35)
+
+
+	// Calculate percents for each port
+	is_zdoom     = ((is_zdoom     << 16) / 5) * 100 >> 16;
+	is_gzdoom    = ((is_gzdoom    << 16) / 5) * 100 >> 16;
+	is_lzdoom    = ((is_lzdoom    << 16) / 6) * 100 >> 16;
+	is_zandronum = ((is_zandronum << 16) / 5) * 100 >> 16;
+	is_zdaemon   = ((is_zdaemon   << 16) / 5) * 100 >> 16;
+	is_eternity  = ((is_eternity  << 16) / 6) * 100 >> 16;
+
+	// Note that the percentages only reflect the detection values
+	// for this function. They are not meant to, and they do not
+	// reflect how similar the source ports are to one another.
+
+	/* //Remove the multi-line comment to enable these debug messages
+	Log(s:"is_zdoom: ",d:is_zdoom,s:"%");
+	Log(s:"is_gzdoom: ",d:is_gzdoom,s:"%");
+	Log(s:"is_lzdoom: ",d:is_lzdoom,s:"%");
+	Log(s:"is_zandronum: ",d:is_zandronum,s:"%");
+	Log(s:"is_zdaemon: ",d:is_zdaemon,s:"%");
+	Log(s:"is_eternity: ",d:is_eternity,s:"%");
+	//*/
+
+	//Figure out the highest detection percent
+	int max_percent = 0;
+	if (is_zdoom     > max_percent) max_percent = is_zdoom;
+	if (is_gzdoom    > max_percent) max_percent = is_gzdoom;
+	if (is_lzdoom    > max_percent) max_percent = is_lzdoom;
+	if (is_zandronum > max_percent) max_percent = is_zandronum;
+	if (is_zdaemon   > max_percent) max_percent = is_zdaemon;
+	if (is_eternity  > max_percent) max_percent = is_eternity;
+
+	// This shouldn't happen, but just in case:
+	if (max_percent == 0) 
+	{
+		GetSrcPort_Result = PORT_UNKNOWN;
+	}
+	else
+	{
+		// For the result here, ports that are further apart from ZDoom are
+		// prioritized in case multiple ports get the same max percentage.
+		// This allows for detecting Zandronum and LZDoom, which without this
+		// prioritization would otherwise get detected as ZDoom/GZDoom.
+		     if (is_eternity  >= max_percent) GetSrcPort_Result = PORT_ETERNITY;
+		else if (is_zdaemon   >= max_percent) GetSrcPort_Result = PORT_ZDAEMON;
+		else if (is_zandronum >= max_percent) GetSrcPort_Result = PORT_ZANDRONUM;
+		else if (is_lzdoom    >= max_percent) GetSrcPort_Result = PORT_LZDOOM;
+		else if (is_gzdoom    >= max_percent) GetSrcPort_Result = PORT_GZDOOM;
+		else if (is_zdoom     >= max_percent) GetSrcPort_Result = PORT_ZDOOM;
+		else                                  GetSrcPort_Result = PORT_UNKNOWN;
+	}
+
+	return GetSrcPort_Result;
+}
